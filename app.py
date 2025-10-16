@@ -110,8 +110,57 @@ class HelloWorld(Resource):
             return {"error": "Invalid token identity"}, 403
         return {'message': 'Hello World'}
 
+# Define schema for GET response
+class BlacklistGetSchema(ma.Schema):
+    email = ma.fields.String()
+    blocked_reason = ma.fields.String()
+    is_blocked = ma.fields.Boolean()
+
+blacklist_get_schema = BlacklistGetSchema()
+
+# Blacklist GET resource
+class BlacklistCheckResource(Resource):
+    @jwt_required()
+    def get(self, email):
+        """
+        Consulta si un email está en la lista negra global.
+        
+        Args:
+            email (str): Email a verificar
+            
+        Returns:
+            JSON con información sobre si el email está bloqueado y el motivo
+        """
+        # Verificar token de autorización
+        identity = get_jwt_identity()
+        if identity != "app":
+            return {"error": "Invalid token identity"}, 403
+        
+        # Validar formato de email básico
+        if not email or '@' not in email:
+            return {'error': 'Invalid email format'}, 400
+        
+        # Buscar el email en la base de datos
+        blacklist_entry = Blacklist.query.filter_by(email=email).first()
+        
+        if blacklist_entry:
+            # Email está en la lista negra
+            return {
+                'email': email,
+                'is_blocked': True,
+                'blocked_reason': blacklist_entry.blocked_reason or 'No reason specified'
+            }, 200
+        else:
+            # Email NO está en la lista negra
+            return {
+                'email': email,
+                'is_blocked': False,
+                'blocked_reason': None
+            }, 200
+
 # Add resources to API
 api.add_resource(BlacklistResource, '/blacklists')
+api.add_resource(BlacklistCheckResource, '/blacklists/<string:email>')
 api.add_resource(HelloWorld, '/')
 
 if __name__ == '__main__':
