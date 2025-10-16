@@ -16,4 +16,5 @@ pytz==2025.2
 six==1.17.0
 SQLAlchemy==1.4.54
 typing_extensions==4.15.0
+flask-jwt-extended==4.7.1
 Werkzeug==1.0.1
