@@ -21,7 +21,7 @@ app_context.push()
 # app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URL')
 
 app.config['SQLALCHEMY_DATABASE_URI'] = (
-    f"postgresql://{os.getenv('DB_USER')}:{os.getenv('DB_PASSWORD')}@"
+    f"postgresql+psycopg2://{os.getenv('DB_USER')}:{os.getenv('DB_PASSWORD')}@"
     f"{os.getenv('DB_HOST')}:{os.getenv('DB_PORT')}/{os.getenv('DB_NAME')}"
 )
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
@@ -104,7 +104,9 @@ class BlacklistResource(Resource):
             return {'message': 'Email added to blacklist successfully'}, 201
         except Exception as e:
             db.session.rollback()
-            return {'error': 'Failed to add email to blacklist'}, 500
+            print("Error al agregar email:", e)
+            traceback.print_exc()
+            return {'error': str(e)}, 500
 
 # Define a simple resource
 class HelloWorld(Resource):
