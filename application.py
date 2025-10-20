@@ -1,4 +1,6 @@
 import os
+import traceback
+from uuid import UUID
 from flask import Flask, jsonify, request
 from flask_jwt_extended import (
     JWTManager, create_access_token, get_jwt_identity, jwt_required, get_jwt
@@ -35,6 +37,10 @@ api = Api(app)
 ma = Marshmallow(app)
 jwt = JWTManager(app)
 
+# Crear las tablas automáticamente al iniciar (incluso en Elastic Beanstalk)
+with app.app_context():
+    db.create_all()
+    
 # JWT fijo de la aplicación
 # STATIC_JWT = create_access_token(
 #     identity="app",
@@ -55,7 +61,7 @@ class Blacklist(db.Model):
     __tablename__ = 'blacklist'
     id = db.Column(db.Integer, primary_key=True)
     email = db.Column(db.String(255), nullable=False)
-    #app_token = db.Column(db.String(36), nullable=False)  # UUID length
+    app_UUID = db.Column(db.String(36), nullable=False)  # UUID length
     blocked_reason = db.Column(db.String(255), nullable=True)
     ip_address = db.Column(db.String(45), nullable=False)  # IPv4/IPv6
     timestamp = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
@@ -90,28 +96,42 @@ class BlacklistResource(Resource):
             return {'error': 'No data provided'}, 400
 
         email = data.get('email')
-        #app_token = str(APP_UUID)
-        blocked_reason = data.get('blocked_reason', '')
-        # Get client IP address (behind Nginx/ELB use X-Forwarded-For)
-        ip_address = request.headers.get('X-Forwarded-For', request.remote_addr).split(',')[0].strip()
-
-        if not email:
-            return {'error': 'email is required'}, 400
+        app_uuid = data.get('app_UUID')
+        blocked_reason = data.get('blocked_reason', '').strip()
+        ip_address = request.remote_addr
+        timestamp = datetime.utcnow()
+        
+        if not email or not app_uuid:
+            return {'error': 'email and app_UUID are required'}, 400
 
         if len(blocked_reason) > 255:
             return {'error': 'blocked_reason must be at most 255 characters'}, 400
 
-        # Create new blacklist entry
-        new_entry = Blacklist(
-            email=email,
-            blocked_reason=blocked_reason,
-            ip_address=ip_address
-        )
-
+        # Validar formato UUID
         try:
+            UUID(app_uuid, version=4)
+        except ValueError:
+            return {'error': 'app_UUID must be a valid UUID (v4)'}, 400
+
+        # Crear y guardar la entrada
+        try:
+            new_entry = Blacklist(
+                email=email,
+                app_UUID=app_uuid,
+                blocked_reason=blocked_reason,
+                ip_address=ip_address,
+                timestamp=timestamp
+            )
             db.session.add(new_entry)
             db.session.commit()
-            return {'message': 'Email added to blacklist successfully'}, 201
+            return {
+                'message': 'Email added to global blacklist successfully',
+                'email': email,
+                'app_UUID': app_uuid,
+                'ip_address': ip_address,
+                'timestamp': timestamp.isoformat()
+            }, 201
+
         except Exception as e:
             db.session.rollback()
             print("Error al agregar email:", e)
@@ -180,8 +200,6 @@ api.add_resource(BlacklistResource, '/blacklists')
 api.add_resource(BlacklistCheckResource, '/blacklists/check/<string:email>')
 api.add_resource(HelloWorld, '/')
 
-# WSGI entrypoint for Elastic Beanstalk / Gunicorn
-application = app
-
+# Ejecutar localmente
 if __name__ == '__main__':
     app.run(debug=True)
