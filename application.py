@@ -10,6 +10,8 @@ from datetime import datetime, timedelta
 from dotenv import load_dotenv
 from marshmallow import fields
 
+import traceback
+
 # Cargar variables de entorno
 load_dotenv()
 
@@ -50,6 +52,7 @@ def get_token():
 
 # Define Blacklist model
 class Blacklist(db.Model):
+    __tablename__ = 'blacklist'
     id = db.Column(db.Integer, primary_key=True)
     email = db.Column(db.String(255), nullable=False)
     #app_token = db.Column(db.String(36), nullable=False)  # UUID length
@@ -68,6 +71,13 @@ blacklist_schema = BlacklistSchema()
 # Define Blacklist resource
 class BlacklistResource(Resource):
     @jwt_required()
+    def get(self):
+        identity = get_jwt_identity()
+        if identity != "app":
+            return {"error": "Invalid token identity"}, 403
+        return {"message": "Use POST to add email to blacklist, GET /blacklists/check/<email> to check if blocked"}
+
+    @jwt_required()
     def post(self):
         # Check for Bearer token
         identity = get_jwt_identity()
@@ -82,11 +92,11 @@ class BlacklistResource(Resource):
         email = data.get('email')
         #app_token = str(APP_UUID)
         blocked_reason = data.get('blocked_reason', '')
-        # Get IP address
-        ip_address = request.remote_addr
+        # Get client IP address (behind Nginx/ELB use X-Forwarded-For)
+        ip_address = request.headers.get('X-Forwarded-For', request.remote_addr).split(',')[0].strip()
 
         if not email:
-            return {'error': 'email and app_token are required'}, 400
+            return {'error': 'email is required'}, 400
 
         if len(blocked_reason) > 255:
             return {'error': 'blocked_reason must be at most 255 characters'}, 400
@@ -108,15 +118,10 @@ class BlacklistResource(Resource):
             traceback.print_exc()
             return {'error': str(e)}, 500
 
-# Define a simple resource
+# Define a simple resource (public, for health checks)
 class HelloWorld(Resource):
-    @jwt_required()
     def get(self):
-        # Check for Bearer token
-        identity = get_jwt_identity()
-        if identity != "app":
-            return {"error": "Invalid token identity"}, 403
-        return {'message': 'Hello World'}
+        return {'message': 'ok', 'service': 'blacklist-api', 'time': datetime.utcnow().isoformat()}
 
 # Define schema for GET response
 class BlacklistGetSchema(ma.Schema):
@@ -166,13 +171,17 @@ class BlacklistCheckResource(Resource):
                 'blocked_reason': None
             }, 200
 
+# Create tables after models are defined
+with app.app_context():
+    db.create_all()
+
 # Add resources to API
 api.add_resource(BlacklistResource, '/blacklists')
-api.add_resource(BlacklistCheckResource, '/blacklists/<string:email>')
+api.add_resource(BlacklistCheckResource, '/blacklists/check/<string:email>')
 api.add_resource(HelloWorld, '/')
 
+# WSGI entrypoint for Elastic Beanstalk / Gunicorn
+application = app
+
 if __name__ == '__main__':
-    # Crear tablas si no existen
-    with app.app_context():
-        db.create_all()
     app.run(debug=True)
