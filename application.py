@@ -11,8 +11,9 @@ from flask_marshmallow import Marshmallow
 from datetime import datetime, timedelta
 from dotenv import load_dotenv
 from marshmallow import fields
+from sqlalchemy import inspect, text
 
-import traceback
+# removed duplicate import
 
 # Cargar variables de entorno
 load_dotenv()
@@ -38,8 +39,19 @@ ma = Marshmallow(app)
 jwt = JWTManager(app)
 
 # Crear las tablas automáticamente al iniciar (incluso en Elastic Beanstalk)
+def ensure_schema():
+    inspector = inspect(db.engine)
+    cols = {c['name'] for c in inspector.get_columns('blacklist')}
+    if 'app_uuid' not in cols:
+        # Add the column, backfill, and enforce NOT NULL
+        with db.engine.begin() as conn:
+            conn.execute(text("ALTER TABLE blacklist ADD COLUMN app_uuid varchar(36)"))
+            conn.execute(text("UPDATE blacklist SET app_uuid = '00000000-0000-0000-0000-000000000000' WHERE app_uuid IS NULL"))
+            conn.execute(text("ALTER TABLE blacklist ALTER COLUMN app_uuid SET NOT NULL"))
+
 with app.app_context():
     db.create_all()
+    ensure_schema()
     
 # JWT fijo de la aplicación
 # STATIC_JWT = create_access_token(
@@ -61,7 +73,7 @@ class Blacklist(db.Model):
     __tablename__ = 'blacklist'
     id = db.Column(db.Integer, primary_key=True)
     email = db.Column(db.String(255), nullable=False)
-    app_UUID = db.Column(db.String(36), nullable=False)  # UUID length
+    app_uuid = db.Column(db.String(36), nullable=False)  # UUID length
     blocked_reason = db.Column(db.String(255), nullable=True)
     ip_address = db.Column(db.String(45), nullable=False)  # IPv4/IPv6
     timestamp = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
@@ -96,13 +108,14 @@ class BlacklistResource(Resource):
             return {'error': 'No data provided'}, 400
 
         email = data.get('email')
-        app_uuid = data.get('app_UUID')
+        # Accept either app_uuid (preferred) or legacy app_UUID key
+        app_uuid = data.get('app_uuid') or data.get('app_UUID')
         blocked_reason = data.get('blocked_reason', '').strip()
-        ip_address = request.remote_addr
+        ip_address = request.headers.get('X-Forwarded-For', request.remote_addr).split(',')[0].strip()
         timestamp = datetime.utcnow()
         
         if not email or not app_uuid:
-            return {'error': 'email and app_UUID are required'}, 400
+            return {'error': 'email and app_uuid are required'}, 400
 
         if len(blocked_reason) > 255:
             return {'error': 'blocked_reason must be at most 255 characters'}, 400
@@ -111,13 +124,13 @@ class BlacklistResource(Resource):
         try:
             UUID(app_uuid, version=4)
         except ValueError:
-            return {'error': 'app_UUID must be a valid UUID (v4)'}, 400
+            return {'error': 'app_uuid must be a valid UUID (v4)'}, 400
 
         # Crear y guardar la entrada
         try:
             new_entry = Blacklist(
                 email=email,
-                app_UUID=app_uuid,
+                app_uuid=app_uuid,
                 blocked_reason=blocked_reason,
                 ip_address=ip_address,
                 timestamp=timestamp
@@ -127,7 +140,7 @@ class BlacklistResource(Resource):
             return {
                 'message': 'Email added to global blacklist successfully',
                 'email': email,
-                'app_UUID': app_uuid,
+                'app_uuid': app_uuid,
                 'ip_address': ip_address,
                 'timestamp': timestamp.isoformat()
             }, 201
@@ -194,11 +207,15 @@ class BlacklistCheckResource(Resource):
 # Create tables after models are defined
 with app.app_context():
     db.create_all()
+    ensure_schema()
 
 # Add resources to API
 api.add_resource(BlacklistResource, '/blacklists')
-api.add_resource(BlacklistCheckResource, '/blacklists/check/<string:email>')
+api.add_resource(BlacklistCheckResource, '/blacklists/<string:email>')
 api.add_resource(HelloWorld, '/')
+
+# WSGI entrypoint for Gunicorn / Elastic Beanstalk
+application = app
 
 # Ejecutar localmente
 if __name__ == '__main__':
