@@ -27,9 +27,9 @@ phases:
       - echo "Creating deployment artifact..."
       - mkdir -p artifacts
       - cp -r . artifacts/
-      - cd artifacts && zip -r ../blacklist-api-artifact.zip . -x "*.git*" "*__pycache__*" "*.pytest_cache*" "*tests*" "*.env*"
-      - echo "Artifact created: blacklist-api-artifact.zip"
-      - ls -la blacklist-api-artifact.zip
+      - 'cd artifacts && zip -r ../blacklist-api-artifact.zip . -x "*.git*" "*__pycache__*" "*.pytest_cache*" "*tests*" "*.env*"'
+      - "echo Artifact created: blacklist-api-artifact.zip"
+      - "ls -la ../blacklist-api-artifact.zip"
 
 artifacts:
   files:
