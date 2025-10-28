@@ -25,15 +25,14 @@ phases:
     commands:
       - echo "Build completed successfully"
       - echo "Creating deployment artifact..."
-      - mkdir -p artifacts
-      - cp -r . artifacts/
-      - 'cd artifacts && zip -r ../blacklist-api-artifact.zip . -x "*.git*" "*__pycache__*" "*.pytest_cache*" "*tests*" "*.env*"'
+      - 'zip -r blacklist-api-artifact.zip . -x ".git/*" "*__pycache__/*" ".pytest_cache/*" "tests/*" ".env" ".env.*" "venv/*" "blacklist-api-artifact.zip"'
       - "echo Artifact created: blacklist-api-artifact.zip"
-      - "ls -la ../blacklist-api-artifact.zip"
+      - "ls -la blacklist-api-artifact.zip"
 
 artifacts:
   files:
     - blacklist-api-artifact.zip
+  base-directory: .
   discard-paths: yes
 
 cache:
