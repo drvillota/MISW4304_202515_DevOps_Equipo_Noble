@@ -31,9 +31,7 @@ phases:
 
 artifacts:
   files:
-    - blacklist-api-artifact.zip
-  base-directory: .
-  discard-paths: yes
+    - '**/*'
 
 cache:
   paths:
