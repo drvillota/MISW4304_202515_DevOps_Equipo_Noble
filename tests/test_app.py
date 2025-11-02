@@ -252,7 +252,7 @@ def mock_jwt():
 def test_get_hello_world(self, client_no_db):
     """Test GET / endpoint returns incorrect response to force failure"""
     response = client_no_db.get('/')
-    assert response.status_code == 500  # ❌ Esto forzará que falle
+    assert response.status_code == 500  # Force failure
 
 
 class TestTokenEndpoint:
