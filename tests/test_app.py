@@ -240,15 +240,19 @@ def mock_jwt():
         yield mock_identity
 
 
-class TestHelloWorld:
-    def test_get_hello_world(self, client_no_db):
-        """Test GET / endpoint returns correct response"""
-        response = client_no_db.get('/')
-        assert response.status_code == 200
-        data = response.get_json()
-        assert data['message'] == 'ok'
-        assert data['service'] == 'blacklist-api'
-        assert 'time' in data
+#class TestHelloWorld:
+#    def test_get_hello_world(self, client_no_db):
+#        """Test GET / endpoint returns correct response"""
+#        response = client_no_db.get('/')
+#        assert response.status_code == 200
+#        data = response.get_json()
+#        assert data['message'] == 'ok'
+#        assert data['service'] == 'blacklist-api'
+#        assert 'time' in data
+def test_get_hello_world(self, client_no_db):
+    """Test GET / endpoint returns incorrect response to force failure"""
+    response = client_no_db.get('/')
+    assert response.status_code == 500  # ❌ Esto forzará que falle
 
 
 class TestTokenEndpoint:

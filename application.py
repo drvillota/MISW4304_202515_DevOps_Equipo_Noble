@@ -154,7 +154,7 @@ class BlacklistResource(Resource):
 # Define a simple resource (public, for health checks)
 class HelloWorld(Resource):
     def get(self):
-        return {'message': 'error', 'service': 'blacklist-api', 'time': datetime.utcnow().isoformat()}
+        return {'message': 'ok', 'service': 'blacklist-api', 'time': datetime.utcnow().isoformat()}
 
 # Define schema for GET response
 class BlacklistGetSchema(ma.Schema):
