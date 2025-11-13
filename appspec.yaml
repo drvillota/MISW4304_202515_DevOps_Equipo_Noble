@@ -3,7 +3,7 @@ Resources:
   - TargetService:
       Type: AWS::ECS::Service
       Properties:
-        TaskDefinition: <TASK_DEFINITION>
+        TaskDefinition: "arn:aws:ecs:us-east-1:119255679784:task-definition/entrega-2-task:1"
         LoadBalancerInfo:
           ContainerName: "blacklist-api"
           ContainerPort: 8000
@@ -11,11 +11,12 @@ Resources:
         NetworkConfiguration:
           AwsvpcConfiguration:
             Subnets:
-              - subnet-xxxxx  # Reemplazar con subnets
-              - subnet-yyyyy
+              - subnet-09906a370c6df8
+              - subnet-0bf7b5d564333add7
             SecurityGroups:
-              - sg-xxxxx     # Reemplazar con security group
+              - sg-03ea60ad1eed89e39
             AssignPublicIp: "ENABLED"
+
 Hooks:
   - BeforeInstall: "BeforeInstall"
   - AfterInstall: "AfterInstall"
