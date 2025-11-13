@@ -41,10 +41,6 @@
         {
           "name": "JWT_SECRET_KEY",
           "value": "reach"
-        },
-        {
-          "name": "PGSSLMODE",
-          "value": "require"
         }
       ],
       "logConfiguration": {
