@@ -1,0 +1,65 @@
+{
+    "family": "blacklist-api-task",
+    "networkMode": "awsvpc",
+    "requiresCompatibilities": ["FARGATE"],
+    "cpu": "256",
+    "memory": "512",
+    "executionRoleArn": "arn:aws:iam::ACCOUNT_ID:role/ecsTaskExecutionRole",
+    "taskRoleArn": "arn:aws:iam::ACCOUNT_ID:role/ecsTaskRole",
+    "containerDefinitions": [
+      {
+        "name": "blacklist-api",
+        "image": "ACCOUNT_ID.dkr.ecr.us-east-1.amazonaws.com/blacklist-api:latest",
+        "essential": true,
+        "portMappings": [
+          {
+            "containerPort": 8000,
+            "protocol": "tcp"
+          }
+        ],
+        "environment": [
+          {
+            "name": "DB_HOST",
+            "value": "rds-endpoint.rds.amazonaws.com"
+          },
+          {
+            "name": "DB_PORT",
+            "value": "5432"
+          },
+          {
+            "name": "DB_NAME",
+            "value": "blacklist_db"
+          },
+          {
+            "name": "DB_USER",
+            "value": "postgres"
+          }
+        ],
+        "secrets": [
+          {
+            "name": "DB_PASSWORD",
+            "valueFrom": "arn:aws:secretsmanager:us-east-1:ACCOUNT_ID:secret:blacklist-db-password"
+          },
+          {
+            "name": "JWT_SECRET_KEY",
+            "valueFrom": "arn:aws:secretsmanager:us-east-1:ACCOUNT_ID:secret:blacklist-jwt-secret"
+          }
+        ],
+        "logConfiguration": {
+          "logDriver": "awslogs",
+          "options": {
+            "awslogs-group": "/ecs/blacklist-api",
+            "awslogs-region": "us-east-1",
+            "awslogs-stream-prefix": "ecs"
+          }
+        },
+        "healthCheck": {
+          "command": ["CMD-SHELL", "curl -f http://localhost:8000/ || exit 1"],
+          "interval": 30,
+          "timeout": 5,
+          "retries": 3,
+          "startPeriod": 60
+        }
+      }
+    ]
+  }
