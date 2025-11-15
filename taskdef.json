@@ -9,7 +9,7 @@
   "containerDefinitions": [
     {
       "name": "blacklist-api",
-      "image": "ACCOUNT_ID.dkr.ecr.us-east-1.amazonaws.com/blacklist-api:latest",
+      "image": "<IMAGE1_NAME>",
       "essential": true,
       "portMappings": [
         {
@@ -41,6 +41,10 @@
         {
           "name": "JWT_SECRET_KEY",
           "value": "reach"
+        },
+        {
+          "name": "PGSSLMODE",
+          "value": "require"
         }
       ],
       "logConfiguration": {
