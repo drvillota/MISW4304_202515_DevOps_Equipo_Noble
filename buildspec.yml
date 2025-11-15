@@ -27,7 +27,7 @@ phases:
       # Login to ECR
       - aws ecr get-login-password --region $AWS_DEFAULT_REGION | docker login --username AWS --password-stdin $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com
       # Create ECR repository if it doesn't exist
-      - aws ecr describe-repositories --repository-names blacklist-api || aws ecr create-repository --repository-name blacklist-api
+      - aws ecr describe-repositories --repository-names entrega-3 || aws ecr create-repository --repository-name entrega-3
       # Get the commit hash for image tagging
       - IMAGE_TAG=$CODEBUILD_RESOLVED_SOURCE_VERSION
 
@@ -37,18 +37,18 @@ phases:
       - python -m pytest tests/ -v --tb=short
       - echo "Tests completed successfully"
       - echo "Building Docker image..."
-      - docker build -t blacklist-api:$IMAGE_TAG .
-      - docker tag blacklist-api:$IMAGE_TAG $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/blacklist-api:$IMAGE_TAG
-      - docker tag blacklist-api:$IMAGE_TAG $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/blacklist-api:latest
+      - docker build -t entrega-3:$IMAGE_TAG .
+      - docker tag entrega-3:$IMAGE_TAG $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/entrega-3:$IMAGE_TAG
+      - docker tag entrega-3:$IMAGE_TAG $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/entrega-3:latest
 
   post_build:
     commands:
       - echo "Pushing Docker image to ECR..."
-      - docker push $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/blacklist-api:$IMAGE_TAG
-      - docker push $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/blacklist-api:latest
+      - docker push $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/entrega-3:$IMAGE_TAG
+      - docker push $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/entrega-3:latest
       - echo "Build completed successfully"
       # Create imageDetail.json for CodeDeploy ECS deployment
-      - printf '{"ImageURI":"%s"}' $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/blacklist-api:$IMAGE_TAG > imageDetail.json
+      - printf '{"ImageURI":"%s"}' $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/entrega-3:$IMAGE_TAG > imageDetail.json
 
 artifacts:
   files:
