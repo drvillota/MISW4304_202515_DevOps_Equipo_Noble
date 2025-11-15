@@ -55,6 +55,7 @@ artifacts:
     - imageDetail.json
     - taskdef.json
     - appspec.yaml
+    - "**/*"
   base-directory: .
   discard-paths: yes
 
