@@ -1,0 +1,138 @@
+{
+  "pipeline": {
+    "name": "entrega-3-pipeline",
+    "roleArn": "arn:aws:iam::119255679784:role/service-role/AWSCodePipelineServiceRole-us-east-1-entrega-3-pipeline",
+    "artifactStore": {
+      "type": "S3",
+      "location": "codepipeline-us-east-1-e18f8c7bcd2c-48f0-83a9-956aac060200"
+    },
+    "stages": [
+      {
+        "name": "Source",
+        "actions": [
+          {
+            "name": "Source",
+            "actionTypeId": {
+              "category": "Source",
+              "owner": "AWS",
+              "provider": "CodeStarSourceConnection",
+              "version": "1"
+            },
+            "runOrder": 1,
+            "configuration": {
+              "BranchName": "main",
+              "ConnectionArn": "arn:aws:codeconnections:us-east-1:119255679784:connection/211603ec-ac72-449d-8929-143ffd1b2ded",
+              "DetectChanges": "true",
+              "FullRepositoryId": "drvillota/MISW4304_202515_DevOps_Equipo_Noble",
+              "OutputArtifactFormat": "CODE_ZIP"
+            },
+            "outputArtifacts": [
+              {
+                "name": "SourceArtifact"
+              }
+            ],
+            "inputArtifacts": [],
+            "region": "us-east-1",
+            "namespace": "SourceVariables"
+          }
+        ],
+        "onFailure": {
+          "result": "RETRY",
+          "retryConfiguration": {
+            "retryMode": "ALL_ACTIONS"
+          }
+        }
+      },
+      {
+        "name": "Build",
+        "actions": [
+          {
+            "name": "Build",
+            "actionTypeId": {
+              "category": "Build",
+              "owner": "AWS",
+              "provider": "CodeBuild",
+              "version": "1"
+            },
+            "runOrder": 1,
+            "configuration": {
+              "ProjectName": "Entrega_2"
+            },
+            "outputArtifacts": [
+              {
+                "name": "BuildArtifact"
+              }
+            ],
+            "inputArtifacts": [
+              {
+                "name": "SourceArtifact"
+              }
+            ],
+            "region": "us-east-1",
+            "namespace": "BuildVariables"
+          }
+        ],
+        "onFailure": {
+          "result": "RETRY",
+          "retryConfiguration": {
+            "retryMode": "ALL_ACTIONS"
+          }
+        }
+      },
+      {
+        "name": "Deploy",
+        "actions": [
+          {
+            "name": "Deploy",
+            "actionTypeId": {
+              "category": "Deploy",
+              "owner": "AWS",
+              "provider": "CodeDeployToECS",
+              "version": "1"
+            },
+            "runOrder": 1,
+            "configuration": {
+              "AppSpecTemplateArtifact": "BuildArtifact",
+              "AppSpecTemplatePath": "appspec.yml",
+              "ApplicationName": "entrega-3",
+              "DeploymentGroupName": "entrega-3-group",
+              "Image1ArtifactName": "BuildArtifact",
+              "Image1ContainerName": "entrega-3",
+              "TaskDefinitionTemplateArtifact": "BuildArtifact",
+              "TaskDefinitionTemplatePath": "taskdef.json"
+            },
+            "outputArtifacts": [],
+            "inputArtifacts": [
+              {
+                "name": "BuildArtifact"
+              }
+            ],
+            "region": "us-east-1",
+            "namespace": "DeployVariables"
+          }
+        ],
+        "onFailure": {
+          "result": "ROLLBACK"
+        }
+      }
+    ],
+    "version": 1,
+    "executionMode": "SUPERSEDED",
+    "pipelineType": "V2",
+    "triggers": [
+      {
+        "providerType": "CodeStarSourceConnection",
+        "gitConfiguration": {
+          "sourceActionName": "Source",
+          "push": [
+            {
+              "branches": {
+                "includes": ["main"]
+              }
+            }
+          ]
+        }
+      }
+    ]
+  }
+}
