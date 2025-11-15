@@ -3,8 +3,11 @@ Resources:
   - TargetService:
       Type: AWS::ECS::Service
       Properties:
-        TaskDefinition: "arn:aws:ecs:us-east-1:119255679784:task-definition/entrega-2-task:1"
+        # CodeDeploy will substitute <TASK_DEFINITION> with the new task definition ARN
+        # built from taskdef.json + imageDetail.json during the deployment.
+        TaskDefinition: "<TASK_DEFINITION>"
         LoadBalancerInfo:
-          ContainerName: "blacklist-api"
+          # Must match the container name and port defined in the ECS task definition / service
+          ContainerName: "entrega-3"
           ContainerPort: 8000
         PlatformVersion: "LATEST"
