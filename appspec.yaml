@@ -8,18 +8,3 @@ Resources:
           ContainerName: "blacklist-api"
           ContainerPort: 8000
         PlatformVersion: "LATEST"
-        NetworkConfiguration:
-          AwsvpcConfiguration:
-            Subnets:
-              - subnet-09906a370c6df8
-              - subnet-0bf7b5d564333add7
-            SecurityGroups:
-              - sg-03ea60ad1eed89e39
-            AssignPublicIp: "ENABLED"
-
-Hooks:
-  - BeforeInstall: "BeforeInstall"
-  - AfterInstall: "AfterInstall"
-  - AfterAllowTestTraffic: "AfterAllowTestTraffic"
-  - BeforeAllowTraffic: "BeforeAllowTraffic"
-  - AfterAllowTraffic: "AfterAllowTraffic"
