@@ -3,11 +3,8 @@ Resources:
   - TargetService:
       Type: AWS::ECS::Service
       Properties:
-        # CodeDeploy will substitute <TASK_DEFINITION> with the new task definition ARN
-        # built from taskdef.json + imageDetail.json during the deployment.
         TaskDefinition: "<TASK_DEFINITION>"
         LoadBalancerInfo:
-          # Must match the container name and port defined in the ECS task definition / service
           ContainerName: "entrega-3"
           ContainerPort: 8000
         PlatformVersion: "LATEST"
