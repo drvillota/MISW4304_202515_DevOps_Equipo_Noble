@@ -1,5 +1,5 @@
 {
-  "family": "blacklist-api-task",
+  "family": "entrega-3-task",
   "networkMode": "awsvpc",
   "requiresCompatibilities": ["FARGATE"],
   "cpu": "256",
