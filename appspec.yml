@@ -1,23 +1,31 @@
-version: 0.0
-Resources:
-  - TargetService:
-      Type: AWS::ECS::Service
-      Properties:
-        TaskDefinition: "<TASK_DEFINITION>"
-        LoadBalancerInfo:
-          ContainerName: "blacklist-api"
-          ContainerPort: 8000
-          TargetGroupPairInfoList:
-            - TargetGroups:
-                - Name: "entrega-3-tg-1"
-                - Name: "entrega-3-tg-2"
-              ProdTrafficRoute:
-                ListenerArns:
-                  - "arn:aws:elasticloadbalancing:us-east-1:119255679784:listener/app/entrega-3-lb/bcef656766756955/62bd8ffb0531856d"
-              TestTrafficRoute:
-                ListenerArns:
-                  - "arn:aws:elasticloadbalancing:us-east-1:119255679784:listener/app/entrega-3-lb/bcef656766756955/beab6abaf48deb98"
-        PlatformVersion: "LATEST"
+{
+  "version": 1,
+  "Resources": [
+    {
+      "TargetService": {
+        "Type": "AWS::ECS::Service",
+        "Properties": {
+          "TaskDefinition": "<TASK_DEFINITION>",
+          "LoadBalancerInfo": {
+            "ContainerName": "blacklist-api",
+            "ContainerPort": 8000
+          }
+        }
+      }
+    }
+  ]
+}
+
+#version: 0.0
+#Resources:
+#  - TargetService:
+#      Type: AWS::ECS::Service
+#      Properties:
+#        TaskDefinition: "<TASK_DEFINITION>"
+#        LoadBalancerInfo:
+#          ContainerName: "blacklist-api"
+#          ContainerPort: 8000
+#        PlatformVersion: "LATEST"
 
 # version: 1.0
 # Resources:
