@@ -5,6 +5,6 @@ Resources:
       Properties:
         TaskDefinition: "<TASK_DEFINITION>"
         LoadBalancerInfo:
-          ContainerName: "entrega-3"
+          ContainerName: "entrega-3-tg-1"
           ContainerPort: 8000
         PlatformVersion: "LATEST"
