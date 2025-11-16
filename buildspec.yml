@@ -48,11 +48,15 @@ phases:
       - docker push $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/blacklist-api:latest
       - echo "Build completed successfully"
       # Create imageDetail.json for CodeDeploy ECS deployment
-      - printf '{"ImageURI":"%s"}' $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/blacklist-api:$IMAGE_TAG > imageDetail.json
+      - echo "Creating imagedefinitions.json for ECS deployment..."
+      - printf '[{"name":"blacklist-api","imageUri":"%s"}]' $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/blacklist-api:$IMAGE_TAG > imagedefinitions.json
+      - cat imagedefinitions.json
+      #- printf '{"ImageURI":"%s"}' $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/blacklist-api:$IMAGE_TAG > imageDetail.json
 
 artifacts:
   files:
-    - imageDetail.json
+    #- imageDetail.json
+    - imagedefinitions.json
     - taskdef.json
     - appspec.yml
   base-directory: .

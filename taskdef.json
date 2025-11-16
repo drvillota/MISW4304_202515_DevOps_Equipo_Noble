@@ -5,7 +5,6 @@
   "cpu": "256",
   "memory": "512",
   "executionRoleArn": "arn:aws:iam::119255679784:role/ecsTaskExecutionRole",
-  "taskRoleArn": "arn:aws:iam::119255679784:role/ecsTaskRole",
   "containerDefinitions": [
     {
       "name": "blacklist-api",
