@@ -12,7 +12,7 @@ from datetime import datetime, timedelta
 from dotenv import load_dotenv
 from marshmallow import fields
 from sqlalchemy import inspect, text
-
+#
 # removed duplicate import
 
 # Cargar variables de entorno
