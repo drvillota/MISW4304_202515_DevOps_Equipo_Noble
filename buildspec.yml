@@ -26,8 +26,6 @@ phases:
       - AWS_ACCOUNT_ID=${AWS_ACCOUNT_ID:-$(aws sts get-caller-identity --query Account --output text)}
       # Login to ECR
       - aws ecr get-login-password --region $AWS_DEFAULT_REGION | docker login --username AWS --password-stdin $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com
-      # Create ECR repository if it doesn't exist
-      - aws ecr describe-repositories --repository-names blacklist-api || aws ecr create-repository --repository-name blacklist-api
       # Get the commit hash for image tagging
       - IMAGE_TAG=$CODEBUILD_RESOLVED_SOURCE_VERSION
 
@@ -37,18 +35,17 @@ phases:
       - python -m pytest tests/ -v --tb=short
       - echo "Tests completed successfully"
       - echo "Building Docker image..."
-      - docker build -t blacklist-api:$IMAGE_TAG .
-      - docker tag blacklist-api:$IMAGE_TAG $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/blacklist-api:$IMAGE_TAG
-      - docker tag blacklist-api:$IMAGE_TAG $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/blacklist-api:latest
+      - docker build -t $REPOSITORY_URI:latest .
+      - docker tag $REPOSITORY_URI:latest $REPOSITORY_URI:$IMAGE_TAG
 
   post_build:
     commands:
       - echo "Pushing Docker image to ECR..."
-      - docker push $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/blacklist-api:$IMAGE_TAG
-      - docker push $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/blacklist-api:latest
+      - docker push $REPOSITORY_URI:latest
+      - docker push $REPOSITORY_URI:$IMAGE_TAG
       - echo "Build completed successfully"
       # Create imageDetail.json for CodeDeploy ECS deployment
-      - printf '{"ImageURI":"%s"}' $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/blacklist-api:$IMAGE_TAG > imageDetail.json
+      - printf '{"ImageURI":"%s"}' $REPOSITORY_URI:$IMAGE_TAG > imageDetail.json
 
 artifacts:
   files:
