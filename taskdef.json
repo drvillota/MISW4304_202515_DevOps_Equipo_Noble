@@ -4,7 +4,7 @@
   "requiresCompatibilities": ["FARGATE"],
   "cpu": "256",
   "memory": "512",
-  "executionRoleArn": "arn:aws:iam::119255679784:role/ecsTaskExecutionRole",
+  "executionRoleArn": "arn:aws:iam::119255679784:role/entrega4-ecs-task-execution-role",
   "containerDefinitions": [
     {
       "name": "entrega4",
@@ -49,7 +49,7 @@
       "logConfiguration": {
         "logDriver": "awslogs",
         "options": {
-          "awslogs-group": "/ecs/blacklist-api",
+          "awslogs-group": "/ecs/entrega4",
           "awslogs-region": "us-east-1",
           "awslogs-stream-prefix": "ecs"
         }
