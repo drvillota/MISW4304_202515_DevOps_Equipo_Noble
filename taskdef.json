@@ -1,5 +1,5 @@
 {
-  "family": "blacklist-api-task",
+  "family": "entrega4-task",
   "networkMode": "awsvpc",
   "requiresCompatibilities": ["FARGATE"],
   "cpu": "256",
@@ -7,7 +7,7 @@
   "executionRoleArn": "arn:aws:iam::119255679784:role/ecsTaskExecutionRole",
   "containerDefinitions": [
     {
-      "name": "blacklist-api",
+      "name": "entrega4",
       "image": "<IMAGE1_NAME>",
       "essential": true,
       "portMappings": [
