@@ -251,6 +251,7 @@ class TestHelloWorld:
         assert 'time' in data
 
 
+
 class TestTokenEndpoint:
     def test_post_token(self, client_no_db):
         """Test POST /token endpoint creates access token"""

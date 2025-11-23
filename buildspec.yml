@@ -8,32 +8,54 @@ phases:
       - echo "Installing dependencies..."
       - pip install -r requirements.txt
       - pip install pytest pytest-flask pytest-mock
+      # Install/Update AWS CLI v2 for ECR operations (CodeBuild images already have AWS CLI)
+      - curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+      - unzip awscliv2.zip
+      - ./aws/install --update || ./aws/install
+      # Docker is provided by CodeBuild when PrivilegedMode=true; no manual install
 
   pre_build:
     commands:
       - echo "Setting up environment..."
       - python --version
       - pip --version
+      - aws --version
+      - docker --version
+      # Ensure required AWS env vars are set
+      - AWS_DEFAULT_REGION=${AWS_DEFAULT_REGION:-$AWS_REGION}
+      - AWS_ACCOUNT_ID=${AWS_ACCOUNT_ID:-$(aws sts get-caller-identity --query Account --output text)}
+      # Login to ECR
+      - aws ecr get-login-password --region $AWS_DEFAULT_REGION | docker login --username AWS --password-stdin $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com
+      # Create ECR repository if it doesn't exist
+      - aws ecr describe-repositories --repository-names blacklist-api || aws ecr create-repository --repository-name blacklist-api
+      # Get the commit hash for image tagging
+      - IMAGE_TAG=$CODEBUILD_RESOLVED_SOURCE_VERSION
 
   build:
     commands:
       - echo "Running unit tests..."
       - python -m pytest tests/ -v --tb=short
       - echo "Tests completed successfully"
+      - echo "Building Docker image..."
+      - docker build -t blacklist-api:$IMAGE_TAG .
+      - docker tag blacklist-api:$IMAGE_TAG $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/blacklist-api:$IMAGE_TAG
+      - docker tag blacklist-api:$IMAGE_TAG $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/blacklist-api:latest
 
   post_build:
     commands:
+      - echo "Pushing Docker image to ECR..."
+      - docker push $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/blacklist-api:$IMAGE_TAG
+      - docker push $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/blacklist-api:latest
       - echo "Build completed successfully"
-      - echo "Creating deployment artifact..."
-      - mkdir -p artifacts
-      - cp -r . artifacts/
-      - cd artifacts && zip -r ../blacklist-api-artifact.zip . -x "*.git*" "*__pycache__*" "*.pytest_cache*" "*tests*" "*.env*"
-      - echo "Artifact created: blacklist-api-artifact.zip"
-      - ls -la blacklist-api-artifact.zip
+      # Create imageDetail.json for CodeDeploy ECS deployment
+      - printf '{"ImageURI":"%s"}' $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/blacklist-api:$IMAGE_TAG > imageDetail.json
 
 artifacts:
   files:
-    - blacklist-api-artifact.zip
+    - imageDetail.json
+    - taskdef.json
+    - appspec.yml
+  base-directory: .
   discard-paths: yes
 
 cache:
