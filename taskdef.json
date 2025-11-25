@@ -56,6 +56,14 @@
         {
           "name": "NEW_RELIC_DISTRIBUTED_TRACING_ENABLED",
           "value": "true"
+        },
+        {
+          "name": "NEW_RELIC_LOG",
+          "value": "stdout"
+        },
+        {
+          "name": "NEW_RELIC_LOG_LEVEL",
+          "value": "info"
         }
       ],
       "logConfiguration": {
