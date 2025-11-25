@@ -19,4 +19,5 @@ flask-jwt-extended==4.7.1
 Werkzeug==2.3.7
 gunicorn==23.0.0
 marshmallow-sqlalchemy==0.28.1 
-python-dotenv==1.0.1             
+python-dotenv==1.0.1
+newrelic             
